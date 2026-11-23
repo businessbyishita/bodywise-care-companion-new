@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Droplet, Info, Sparkles } from 'lucide-react';
+import React from 'react';
+import { Droplet, Info } from 'lucide-react';
 
 /**
  * Animated SVG Depleting Bottle / Tube Tracker
@@ -14,10 +14,8 @@ export default function DepletingBottleSvg({
   totalApplications = 100,
   dosePerUseMl = 0.5,
   isAnimating = false,
-  onOpenMatchCheck = null,
   size = 'md' // 'sm' | 'md' | 'lg'
 }) {
-  const [isHovered, setIsHovered] = useState(false);
 
   // Clamped percentage
   const clampedPercent = Math.max(2, Math.min(100, fillPercent));
@@ -39,11 +37,8 @@ export default function DepletingBottleSvg({
   return (
     <div className="flex flex-col items-center">
       <div 
-        className={`relative ${sizeClasses} cursor-pointer group transition-transform duration-300 hover:scale-105`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onClick={() => onOpenMatchCheck && onOpenMatchCheck()}
-        title="Click to check your physical bottle fill level match"
+        className={`relative ${sizeClasses} group transition-transform duration-300 hover:scale-105`}
+        aria-label="Illustration of estimated product remaining"
       >
         {/* Glow when animating drop */}
         {isAnimating && (
@@ -354,13 +349,7 @@ export default function DepletingBottleSvg({
           <span>{clampedPercent}% Full</span>
         </div>
 
-        {/* Match Check hint on hover */}
-        {isHovered && (
-          <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#002742] text-white text-[10px] font-bold rounded-lg shadow-lg whitespace-nowrap pointer-events-none z-20 flex items-center gap-1 animate-fade-in border border-[#DCEEF7]">
-            <Sparkles className="w-2.5 h-2.5 text-[#BDE0F1]" />
-            <span>Check Bottle Match</span>
-          </div>
-        )}
+
       </div>
 
       {/* Uses countdown and volume metric */}
