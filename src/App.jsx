@@ -24,7 +24,6 @@ import ProductCard from './components/ProductCard';
 import NotificationBanner from './components/NotificationBanner';
 import DailyReadinessRing from './components/DailyReadinessRing';
 import AddProductDrawer from './components/AddProductDrawer';
-import BottleMatchModal from './components/BottleMatchModal';
 import ProductDetailModal from './components/ProductDetailModal';
 import ProductEditModal from './components/ProductEditModal';
 
@@ -85,7 +84,6 @@ export default function App() {
 
   // Modals & Drawers
   const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
-  const [matchCheckProduct, setMatchCheckProduct] = useState(null);
   const [detailModalProduct, setDetailModalProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
@@ -116,7 +114,7 @@ export default function App() {
   // Core Actions
   // ----------------------------------------------------
 
-  // 1. Log Today's Dose with fluid drop animation & bottle match prompt
+  // 1. Log Today's Dose with fluid drop animation
   const handleLogDose = (productId) => {
     setActiveProducts(prev => prev.map(p => {
       if (p.id !== productId) return p;
@@ -149,17 +147,7 @@ export default function App() {
     const targetProduct = activeProducts.find(p => p.id === productId);
     triggerToast(`Logged dose for ${targetProduct?.shortName || 'item'}! Liquid dropped by ${targetProduct?.dosePerUseMl || 0.5} ml.`);
 
-    // Prompt the Bottle Match Check modal after a brief pause so user watches the fluid drop
-    setTimeout(() => {
-      if (targetProduct) {
-        const updated = {
-          ...targetProduct,
-          remainingUses: Math.max(0, targetProduct.remainingUses - 1),
-          currentFillPercent: Math.max(2, Math.round(targetProduct.currentFillPercent - ((targetProduct.dosePerUseMl / targetProduct.totalVolumeMl) * 100)))
-        };
-        setMatchCheckProduct(updated);
-      }
-    }, 900);
+
   };
 
   // 2. Toggle Micro-habit
@@ -197,19 +185,6 @@ export default function App() {
       setActiveProducts(prev => prev.filter(p => p.id !== product.id));
       triggerToast('Product removed from your routine.');
     }
-  };
-
-  // 4. Update Fill Percent from Calibration
-  const handleUpdateFillPercent = (productId, newPercent) => {
-    setActiveProducts(prev => prev.map(p => {
-      if (p.id !== productId) return p;
-      return {
-        ...p,
-        currentFillPercent: newPercent,
-        remainingUses: Math.round((newPercent / 100) * p.totalApplications)
-      };
-    }));
-    triggerToast(`Calibrated virtual bottle to ${newPercent}% full.`);
   };
 
   // 5. Reset Demo to initial state
@@ -431,7 +406,6 @@ export default function App() {
                   checkedHabits={checkedHabits}
                   onToggleHabit={handleToggleHabit}
                   onLogDose={handleLogDose}
-                  onOpenMatchCheck={(prod) => setMatchCheckProduct(prod)}
                   onOpenDetailModal={(prod) => setDetailModalProduct(prod)}
                   onEditProduct={(prod) => setEditingProduct(prod)}
                   onRemoveProduct={handleRemoveProduct}
@@ -471,21 +445,11 @@ export default function App() {
         <ProductEditModal key={editingProduct.id} product={editingProduct} onClose={() => setEditingProduct(null)} onSave={handleUpdateProduct} />
       )}
 
-      {/* 2. Physical Bottle Match Check Modal */}
-      {matchCheckProduct && (
-        <BottleMatchModal 
-          product={matchCheckProduct}
-          onClose={() => setMatchCheckProduct(null)}
-          onUpdateFillPercent={handleUpdateFillPercent}
-        />
-      )}
-
-      {/* 3. Deep Clinical Detail & Protocol Modal */}
+      {/* 2. Deep Clinical Detail & Protocol Modal */}
       {detailModalProduct && (
         <ProductDetailModal 
           product={detailModalProduct}
           onClose={() => setDetailModalProduct(null)}
-          onOpenMatchCheck={(prod) => setMatchCheckProduct(prod)}
         />
       )}
     </div>
