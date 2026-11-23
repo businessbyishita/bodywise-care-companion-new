@@ -28,7 +28,9 @@ import BottleMatchModal from './components/BottleMatchModal';
 import ProductDetailModal from './components/ProductDetailModal';
 import ProductEditModal from './components/ProductEditModal';
 
-const STORAGE_KEY = 'bodywise_care_companion_state_v7';
+const STORAGE_KEY = 'bodywise_care_companion_state_v8';
+const dateOffset = (daysAgo) => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-daysAgo); return d.toISOString().slice(0,10); };
+const createDemoProducts = () => DEFAULT_ACTIVE_PRODUCTS.slice(0,2).map((p,i)=>({...p,startDate:dateOffset(i===0?11:21),durationDays:(p.cycleWeeksTotal||8)*7,loggedToday:false}));
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -48,7 +50,7 @@ export default function App() {
     } catch (e) {
       console.error('Error loading state:', e);
     }
-    return DEFAULT_ACTIVE_PRODUCTS;
+    return createDemoProducts();
   });
 
   const [checkedHabits, setCheckedHabits] = useState(() => {
@@ -180,7 +182,7 @@ export default function App() {
       triggerToast('Item is already active on your shelf!');
       return;
     }
-    setActiveProducts(prev => [{ ...newProduct, startDate: newProduct.startDate, durationDays: newProduct.durationDays || (newProduct.cycleWeeksTotal || 8) * 7, currentWeek: 1 }, ...prev]);
+    setActiveProducts(prev => [{ ...newProduct, startDate: newProduct.startDate, durationDays: newProduct.durationDays || (newProduct.cycleWeeksTotal || 8) * 7, loggedToday: false, streakDays: 0 }, ...prev]);
     triggerToast(`Added ${newProduct.shortName} to your routine shelf!`);
   };
 
@@ -214,7 +216,7 @@ export default function App() {
   const handleResetDemo = () => {
     if (window.confirm('Reset all routine doses, bottle levels, and habit streaks to default Be Bodywise demo state?')) {
       localStorage.removeItem(STORAGE_KEY);
-      setActiveProducts(DEFAULT_ACTIVE_PRODUCTS);
+      setActiveProducts(createDemoProducts());
       setCheckedHabits({});
       setSimulatedDay(3);
       setShelfFilter('due_only');
@@ -466,7 +468,7 @@ export default function App() {
       />
 
       {editingProduct && (
-        <ProductEditModal product={editingProduct} onClose={() => setEditingProduct(null)} onSave={handleUpdateProduct} />
+        <ProductEditModal key={editingProduct.id} product={editingProduct} onClose={() => setEditingProduct(null)} onSave={handleUpdateProduct} />
       )}
 
       {/* 2. Physical Bottle Match Check Modal */}
