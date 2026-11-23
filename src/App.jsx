@@ -29,6 +29,17 @@ import ProductEditModal from './components/ProductEditModal';
 
 const STORAGE_KEY = 'bodywise_care_companion_state_v8';
 const dateOffset = (daysAgo) => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-daysAgo); return d.toISOString().slice(0,10); };
+const simulatedDateKey = (dayOfWeek) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay());
+  weekStart.setDate(weekStart.getDate() + dayOfWeek);
+  const y = weekStart.getFullYear();
+  const m = String(weekStart.getMonth() + 1).padStart(2, '0');
+  const d = String(weekStart.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
 const createDemoProducts = () => DEFAULT_ACTIVE_PRODUCTS.slice(0,2).map((p,i)=>({...p,startDate:dateOffset(i===0?11:21),durationDays:(p.cycleWeeksTotal||8)*7,loggedToday:false}));
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -43,7 +54,7 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.activeProducts && parsed.activeProducts.length > 0) {
-          return parsed.activeProducts.map(p => ({ ...p, startDate: p.startDate || new Date().toISOString().slice(0, 10), durationDays: p.durationDays || (p.cycleWeeksTotal || 8) * 7 }));
+          return parsed.activeProducts.map(p => ({ ...p, startDate: p.startDate || new Date().toISOString().slice(0, 10), durationDays: p.durationDays || (p.cycleWeeksTotal || 8) * 7, doseLogs: p.doseLogs || {} }));
         }
       }
     } catch (e) {
@@ -116,8 +127,10 @@ export default function App() {
 
   // 1. Log Today's Dose with fluid drop animation
   const handleLogDose = (productId) => {
+    const logDate = simulatedDateKey(simulatedDay);
     setActiveProducts(prev => prev.map(p => {
       if (p.id !== productId) return p;
+      if (p.doseLogs?.[logDate]) return p;
 
       // Calculate new remaining uses and fill percent
       const newRemainingUses = Math.max(0, p.remainingUses - 1);
@@ -129,6 +142,7 @@ export default function App() {
         ...p,
         remainingUses: newRemainingUses,
         currentFillPercent: newFillPercent,
+        doseLogs: { ...(p.doseLogs || {}), [logDate]: true },
         loggedToday: true,
         streakDays: p.streakDays + 1
       };
@@ -170,7 +184,7 @@ export default function App() {
       triggerToast('Item is already active on your shelf!');
       return;
     }
-    setActiveProducts(prev => [{ ...newProduct, startDate: newProduct.startDate, durationDays: newProduct.durationDays || (newProduct.cycleWeeksTotal || 8) * 7, loggedToday: false, streakDays: 0 }, ...prev]);
+    setActiveProducts(prev => [{ ...newProduct, startDate: newProduct.startDate, durationDays: newProduct.durationDays || (newProduct.cycleWeeksTotal || 8) * 7, loggedToday: false, doseLogs: {}, streakDays: 0 }, ...prev]);
     triggerToast(`Added ${newProduct.shortName} to your routine shelf!`);
   };
 
@@ -203,8 +217,10 @@ export default function App() {
   // Product display list:
   // By default, show only items scheduled for the selected day.
   // ----------------------------------------------------
-  const productsScheduledToday = activeProducts.filter(p => p.frequencyDays.includes(simulatedDay));
-  const productsDisplayed = shelfFilter === 'due_only' ? productsScheduledToday : activeProducts;
+  const selectedDateKey = simulatedDateKey(simulatedDay);
+  const productsForSelectedDay = activeProducts.map(p => ({ ...p, loggedToday: Boolean(p.doseLogs?.[selectedDateKey]) }));
+  const productsScheduledToday = productsForSelectedDay.filter(p => p.frequencyDays.includes(simulatedDay));
+  const productsDisplayed = shelfFilter === 'due_only' ? productsScheduledToday : productsForSelectedDay;
 
   // ----------------------------------------------------
   // Derived Readiness Metrics for Today's Scheduled Care
@@ -324,7 +340,7 @@ export default function App() {
           <section className="space-y-2">
             <NotificationBanner 
               currentDayOfWeek={simulatedDay}
-              activeProducts={activeProducts}
+              activeProducts={productsForSelectedDay}
               onSimulateDayChange={(newDay) => {
                 setSimulatedDay(newDay);
                 setShelfFilter('due_only');
