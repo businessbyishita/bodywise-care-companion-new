@@ -6,7 +6,6 @@ import VisualDosageGuide from './VisualDosageGuide';
 export default function ProductDetailModal({
   product,
   onClose,
-  onOpenMatchCheck
 }) {
   if (!product) return null;
 
@@ -67,18 +66,6 @@ export default function ProductDetailModal({
                 {product.tagline}
               </p>
 
-              <div className="pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose();
-                    onOpenMatchCheck(product);
-                  }}
-                  className="text-xs text-bodywise-600 font-bold hover:underline"
-                >
-                  Verify Physical Bottle Fluid Match →
-                </button>
-              </div>
             </div>
           </div>
 
