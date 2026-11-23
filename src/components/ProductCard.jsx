@@ -12,7 +12,6 @@ import {
   AlertCircle, 
   ArrowRight, 
   ShieldCheck, 
-  Scale, 
   Atom, 
   Lightbulb, 
   Coffee 
@@ -27,7 +26,6 @@ export default function ProductCard({
   checkedHabits = {},
   onToggleHabit = null,
   onLogDose,
-  onOpenMatchCheck,
   onOpenDetailModal,
   onRemoveProduct = null,
   onEditProduct = null
@@ -134,18 +132,9 @@ export default function ProductCard({
               totalApplications={product.totalApplications}
               dosePerUseMl={product.dosePerUseMl}
               isAnimating={animatingDrop}
-              onOpenMatchCheck={() => onOpenMatchCheck(product)}
               size="md"
             />
             
-            <button
-              type="button"
-              onClick={() => onOpenMatchCheck(product)}
-              className="mt-2 text-[11px] font-bold text-[#334155] hover:text-[#00385F] flex items-center gap-1 underline underline-offset-2 transition-colors"
-            >
-              <Scale className="w-3.5 h-3.5" />
-              <span>Verify Bottle Match</span>
-            </button>
           </div>
 
           {/* Product Info & Action Area */}
