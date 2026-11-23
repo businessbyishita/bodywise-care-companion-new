@@ -80,14 +80,15 @@ export default function ProductCard({
     };
   }
 
-  // Milestone current index
-  const activeMilestone = product.timelineMilestones.find(m => m.current) || product.timelineMilestones[0];
+  // Journey milestones follow the calculated week, never a static demo marker.
   const startDate = product.startDate ? new Date(`${product.startDate}T00:00:00`) : new Date();
   const todayDate = new Date(); todayDate.setHours(0,0,0,0);
   const elapsedDays = Math.max(0, Math.floor((todayDate - startDate) / 86400000));
   const journeyDays = Math.max(1, Number(product.durationDays || (product.cycleWeeksTotal || 8) * 7));
   const progressPercent = Math.min(100, Math.round((elapsedDays / journeyDays) * 100));
-  const journeyDay = Math.min(journeyDays, elapsedDays + 1);
+  const journeyDay = elapsedDays + 1;
+  const journeyWeek = Math.floor(elapsedDays / 7) + 1;
+  const activeMilestone = [...(product.timelineMilestones || [])].filter(m => Number(m.week) <= journeyWeek).sort((a,b) => b.week-a.week)[0] || (product.timelineMilestones || [])[0] || { title: 'Your routine is underway', desc: 'Keep following your product schedule consistently.' };
 
   return (
     <div className={`rounded-3xl border-2 transition-all duration-300 bg-white shadow-warm hover:shadow-warm-lg overflow-hidden ${
@@ -195,7 +196,7 @@ export default function ProductCard({
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-[#002742] flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-[#334155]" />
-                  <span>Day {journeyDay} of {journeyDays} · Journey progress:</span>
+                  <span>Day {journeyDay} · Week {journeyWeek} · Journey progress:</span>
                 </span>
                 <span className="font-extrabold text-[#334155]">
                   {progressPercent}% Journey
