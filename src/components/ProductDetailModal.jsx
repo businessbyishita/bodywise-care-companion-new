@@ -6,6 +6,7 @@ import VisualDosageGuide from './VisualDosageGuide';
 export default function ProductDetailModal({
   product,
   onClose,
+  onOpenMatchCheck
 }) {
   if (!product) return null;
 
@@ -66,6 +67,18 @@ export default function ProductDetailModal({
                 {product.tagline}
               </p>
 
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenMatchCheck(product);
+                  }}
+                  className="text-xs text-bodywise-600 font-bold hover:underline"
+                >
+                  Verify Physical Bottle Fluid Match →
+                </button>
+              </div>
             </div>
           </div>
 
@@ -113,9 +126,8 @@ export default function ProductDetailModal({
 
           {/* Clinical Tips & Application Protocol */}
           {product.clinicalTips && product.clinicalTips.length > 0 && (
-            <div className="p-4 rounded-2xl bg-white border border-bodywise-200 space-y-2">
+            <div className="application-best-practices p-4 rounded-2xl bg-white border border-bodywise-200 space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-bodywise-900 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-bodywise-600" />
                 <span>Application Best Practices</span>
               </h4>
               <ul className="space-y-1.5">
