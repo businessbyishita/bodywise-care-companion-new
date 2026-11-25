@@ -104,3 +104,6 @@ body{background:#F7F9FB}
 .week-trail-copy p{font-size:12px!important;line-height:1.55!important;color:#607482;margin:4px 0 0!important}
 .current-week-badge{background:#005995;color:#fff;border-radius:20px;padding:3px 7px;font-size:10px;font-weight:700;letter-spacing:.02em}
 @media(max-width:640px){.week-trail-section{padding:12px}.week-trail-heading{align-items:flex-start}.week-trail-heading h4{font-size:15px!important}.week-trail-title strong{font-size:12px}}
+
+/* Clear label for practical product-use instructions */
+.application-guidelines-heading{font-size:14px!important;line-height:1.35;font-weight:750!important;color:#204A61;margin:14px 0 6px!important}
