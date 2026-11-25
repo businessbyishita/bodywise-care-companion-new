@@ -1,5 +1,3 @@
-import React from 'react';
-import { Droplet, Info } from 'lucide-react';
 
 /**
  * Animated SVG Depleting Bottle / Tube Tracker
@@ -14,6 +12,7 @@ export default function DepletingBottleSvg({
   totalApplications = 100,
   dosePerUseMl = 0.5,
   isAnimating = false,
+  onOpenMatchCheck = null,
   size = 'md' // 'sm' | 'md' | 'lg'
 }) {
 
@@ -35,10 +34,11 @@ export default function DepletingBottleSvg({
   }[size] || 'w-24 h-40';
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex items-center justify-center">
       <div 
-        className={`relative ${sizeClasses} group transition-transform duration-300 hover:scale-105`}
-        aria-label="Illustration of estimated product remaining"
+        className={`relative ${sizeClasses} cursor-pointer group transition-transform duration-300 hover:scale-105`}
+        onClick={() => onOpenMatchCheck && onOpenMatchCheck()}
+        title="Click to check your physical bottle fill level match"
       >
         {/* Glow when animating drop */}
         {isAnimating && (
@@ -341,26 +341,8 @@ export default function DepletingBottleSvg({
           )}
         </svg>
 
-        {/* Fill level badge bubble */}
-        <div 
-          className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-tight shadow-md border-2 border-[#DCEEF7] flex items-center gap-1 whitespace-nowrap bg-white text-[#334155] transition-all duration-300 group-hover:scale-105"
-        >
-          <span className="w-2 h-2 rounded-full bg-[#005995]" />
-          <span>{clampedPercent}% Full</span>
-        </div>
-
-
       </div>
 
-      {/* Uses countdown and volume metric */}
-      <div className="mt-4 text-center">
-        <p className="text-xs font-bold text-[#002742]">
-          {remainingUses} of {totalApplications} doses left
-        </p>
-        <p className="text-[11px] text-[#334155] font-semibold">
-          ~{(remainingUses * dosePerUseMl).toFixed(1)} ml remaining
-        </p>
-      </div>
     </div>
   );
 }
