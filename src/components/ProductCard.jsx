@@ -58,8 +58,8 @@ export default function ProductCard({ product, selectedDate, onLogDose, onEdit, 
           })}
         </div>
       </section>
-      <section><h4>Dosage guide</h4><p>{product.doseDescription || product.visualDosageValue}</p>{(product.boosters||[]).filter(h=>h.type==='withDose').map((h,i)=><span className="detail-step" key={h.id}>{i+1}. {h.title}</span>)}</section>
-      <section><h4>The science behind your routine</h4><p>{product.whyRationingFails || product.tagline || 'Consistency helps you follow a routine long enough to understand how your skin responds.'}</p>{(product.clinicalTips||[]).map((tip,i)=><span className="detail-step application-tip" key={`tip-${i}`}>{tip}</span>)}</section>
+      <section><h4>Dosage guide</h4><p>{product.doseDescription || product.visualDosageValue}</p></section>
+      <section><h4>The science behind your routine</h4><p>{product.whyRationingFails || product.tagline || 'Consistency helps you follow a routine long enough to understand how your skin responds.'}</p>{(product.clinicalTips||[]).length > 0 && <><h4 className="application-guidelines-heading">Application Guidelines</h4>{(product.clinicalTips||[]).map((tip,i)=><span className="detail-step application-tip" key={`tip-${i}`}>{tip}</span>)}</>}</section>
     </div>}
   </article>;
 }
