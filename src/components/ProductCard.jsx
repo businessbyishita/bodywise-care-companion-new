@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Check, Pencil, Trash2, CalendarDays, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronUp, Check, Pencil, Trash2 } from 'lucide-react';
 import { getSupplyStatus, formatDate } from '../utils';
 import DepletingBottleSvg from './DepletingBottleSvg';
 
@@ -32,9 +32,9 @@ export default function ProductCard({ product, selectedDate, onLogDose, onEdit, 
     </div>
     <div className="product-actions"><button className="text-button" aria-expanded={details} onClick={()=>setDetails(v=>!v)}>Product details {details?<ChevronUp size={15}/>:<ChevronDown size={15}/>}</button><div className="action-buttons"><button className="action-button" onClick={()=>onEdit(product)}><Pencil size={14}/>Edit start date</button><button className="action-button remove-action" onClick={()=>onRemove(product)}><Trash2 size={14}/>Remove</button></div></div>
     {details && <div className="details-panel">
-      <section className="journey-panel"><button className="journey-panel-toggle" onClick={()=>setJourneyOpen(v=>!v)} aria-expanded={journeyOpen}><span><Sparkles size={15}/> Your journey · 1% better, every day</span>{journeyOpen?<ChevronUp size={15}/>:<ChevronDown size={15}/>}</button><p>Started {formatDate(product.startDate)} · Day {dayNumber} · Week {weekNumber} of {Math.ceil(duration/7)}</p>{journeyOpen&&<div className="journey-milestone"><strong>{milestone?.title || 'Consistency is progress'}</strong><span>{milestone?.desc || 'Keep following your routine and give your skin time to respond.'}</span></div>}</section>
+      <section className="journey-panel"><button className="journey-panel-toggle" onClick={()=>setJourneyOpen(v=>!v)} aria-expanded={journeyOpen}><span>Your journey · 1% better, every day</span>{journeyOpen?<ChevronUp size={15}/>:<ChevronDown size={15}/>}</button><p>Started {formatDate(product.startDate)} · Day {dayNumber} · Week {weekNumber} of {Math.ceil(duration/7)}</p>{journeyOpen&&<div className="journey-milestone"><strong>{milestone?.title || 'Consistency is progress'}</strong><span>{milestone?.desc || 'Keep following your routine and give your skin time to respond.'}</span></div>}</section>
       <section><h4>Dosage guide</h4><p>{product.doseDescription || product.visualDosageValue}</p>{(product.boosters||[]).filter(h=>h.type==='withDose').map((h,i)=><span className="detail-step" key={h.id}>{i+1}. {h.title}</span>)}</section>
-      <section><h4>The science behind your routine</h4><p>{product.whyRationingFails || product.tagline || 'Consistency helps you follow a routine long enough to understand how your skin responds.'}</p>{(product.clinicalTips||[]).map((tip,i)=><span className="detail-step" key={`tip-${i}`}>{tip}</span>)}</section>
+      <section><h4>The science behind your routine</h4><p>{product.whyRationingFails || product.tagline || 'Consistency helps you follow a routine long enough to understand how your skin responds.'}</p>{(product.clinicalTips||[]).map((tip,i)=><span className="detail-step application-tip" key={`tip-${i}`}>{tip}</span>)}</section>
     </div>}
   </article>;
 }
