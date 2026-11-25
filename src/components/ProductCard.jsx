@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, Check, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Check, Pencil, Trash2 } from 'lucide-react';
 import { getSupplyStatus, formatDate } from '../utils';
 import DepletingBottleSvg from './DepletingBottleSvg';
 
