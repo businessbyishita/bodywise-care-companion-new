@@ -1,473 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Sparkles, 
-  RotateCcw, 
-  Plus, 
-  Droplet, 
-  CheckCircle2, 
-  ShieldCheck, 
-  Bell, 
-  Calendar, 
-  Flame, 
-  ChevronRight, 
-  SlidersHorizontal,
-  HeartHandshake,
-  Coffee,
-  Check
-} from 'lucide-react';
-import confetti from 'canvas-confetti';
-
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Plus, Check, Droplet, RotateCcw, X, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { DEFAULT_ACTIVE_PRODUCTS } from './data/products';
 import { SCIENCE_HABITS_BY_CONCERN } from './data/habits';
-
 import ProductCard from './components/ProductCard';
-import NotificationBanner from './components/NotificationBanner';
-import DailyReadinessRing from './components/DailyReadinessRing';
 import AddProductDrawer from './components/AddProductDrawer';
-import ProductDetailModal from './components/ProductDetailModal';
 import ProductEditModal from './components/ProductEditModal';
+import { getSupplyStatus, formatDate, localISODate, STORE_URL_PLACEHOLDER } from './utils';
 
-const STORAGE_KEY = 'bodywise_care_companion_state_v8';
-const dateOffset = (daysAgo) => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-daysAgo); return d.toISOString().slice(0,10); };
-const simulatedDateKey = (dayOfWeek) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay());
-  weekStart.setDate(weekStart.getDate() + dayOfWeek);
-  const y = weekStart.getFullYear();
-  const m = String(weekStart.getMonth() + 1).padStart(2, '0');
-  const d = String(weekStart.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
-const createDemoProducts = () => DEFAULT_ACTIVE_PRODUCTS.slice(0,2).map((p,i)=>({...p,startDate:dateOffset(i===0?11:21),durationDays:(p.cycleWeeksTotal||8)*7,loggedToday:false}));
+const STORAGE_KEY='bodywise_care_companion_state_v8';
+const todayISO=()=>localISODate(new Date());
+const migrateProduct=p=>({...p,startDate:p.startDate||todayISO(),durationDays:p.durationDays||(p.cycleWeeksTotal||8)*7,remainingUses:Math.max(0,Number(p.remainingUses??p.totalApplications??0)),doseLogs:p.doseLogs||(p.loggedToday?[{date:p.lastLoggedDate||todayISO(),at:new Date().toISOString()}]:[]),loggedToday:p.lastLoggedDate? p.lastLoggedDate===todayISO():!!p.loggedToday,storeUrl:p.storeUrl||STORE_URL_PLACEHOLDER,boosters:(p.boosters||SCIENCE_HABITS_BY_CONCERN[p.concernId]?.habits||[]).map(h=>({...h,type:h.id==='habit-dry-60s'||h.id==='habit-scalp-massage'||h.id==='habit-pat-dont-rub'||h.id==='habit-damp-skin-application'?'withDose':h.id==='habit-skip-loofah'||h.id==='habit-cotton-wear'?'oneTime':'daily'}))});
+const seed=()=>DEFAULT_ACTIVE_PRODUCTS.slice(0,2).map((p,i)=>migrateProduct({...p,startDate:localISODate(new Date(Date.now()-(i?21:11)*86400000)),remainingUses:p.remainingUses||p.totalApplications||12,loggedToday:false}));
+const weekdayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const habitFor=(h)=>({id:h.title.trim().toLowerCase(),title:h.title,science:h.science,type:h.type||'daily'});
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-export default function App() {
-  // ----------------------------------------------------
-  // Persistent State
-  // ----------------------------------------------------
-  const [activeProducts, setActiveProducts] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.activeProducts && parsed.activeProducts.length > 0) {
-          return parsed.activeProducts.map(p => ({ ...p, startDate: p.startDate || new Date().toISOString().slice(0, 10), durationDays: p.durationDays || (p.cycleWeeksTotal || 8) * 7, doseLogs: p.doseLogs || {} }));
-        }
-      }
-    } catch (e) {
-      console.error('Error loading state:', e);
-    }
-    return createDemoProducts();
-  });
-
-  const [checkedHabits, setCheckedHabits] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.checkedHabits) return parsed.checkedHabits;
-      }
-    } catch (e) {
-      console.error('Error loading checked habits:', e);
-    }
-    // Pre-check 1 habit for friendly initial state
-    return {};
-  });
-
-  const [simulatedDay, setSimulatedDay] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (typeof parsed.simulatedDay === 'number') return parsed.simulatedDay;
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    return 3; // Wednesday by default (Active day for AHA BHA 3x/week!)
-  });
-
-  // Show only products scheduled for the selected day by default.
-  const [shelfFilter, setShelfFilter] = useState('due_only');
-
-  // Modals & Drawers
-  const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
-  const [detailModalProduct, setDetailModalProduct] = useState(null);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [toastMessage, setToastMessage] = useState(null);
-
-  // Sync to localStorage
-  useEffect(() => {
-    try {
-      const stateToSave = {
-        activeProducts,
-        checkedHabits,
-        simulatedDay
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-    } catch (e) {
-      console.error('Error saving state:', e);
-    }
-  }, [activeProducts, checkedHabits, simulatedDay]);
-
-  // Show Toast
-  const triggerToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3500);
-  };
-
-  // ----------------------------------------------------
-  // Core Actions
-  // ----------------------------------------------------
-
-  // 1. Log Today's Dose with fluid drop animation
-  const handleLogDose = (productId) => {
-    const logDate = simulatedDateKey(simulatedDay);
-    setActiveProducts(prev => prev.map(p => {
-      if (p.id !== productId) return p;
-      if (p.doseLogs?.[logDate]) return p;
-
-      // Calculate new remaining uses and fill percent
-      const newRemainingUses = Math.max(0, p.remainingUses - 1);
-      // Deplete fill percent by one exact dose fraction
-      const dosePercentDrop = (p.dosePerUseMl / p.totalVolumeMl) * 100;
-      const newFillPercent = Math.max(2, Math.round(p.currentFillPercent - dosePercentDrop));
-
-      return {
-        ...p,
-        remainingUses: newRemainingUses,
-        currentFillPercent: newFillPercent,
-        doseLogs: { ...(p.doseLogs || {}), [logDate]: true },
-        loggedToday: true,
-        streakDays: p.streakDays + 1
-      };
-    }));
-
-    // Trigger celebratory confetti in #005995 brand shades and white
-    try {
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.7 },
-        colors: ['#005995', '#8CC7E5', '#FFFFFF', '#DCEEF7']
-      });
-    } catch (e) {}
-
-    const targetProduct = activeProducts.find(p => p.id === productId);
-    triggerToast(`Logged dose for ${targetProduct?.shortName || 'item'}! Liquid dropped by ${targetProduct?.dosePerUseMl || 0.5} ml.`);
-
-
-  };
-
-  // 2. Toggle Micro-habit
-  const handleToggleHabit = (habitId) => {
-    setCheckedHabits(prev => {
-      const nextState = {
-        ...prev,
-        [habitId]: !prev[habitId]
-      };
-      if (nextState[habitId]) {
-        triggerToast('Daily booster checked! Readiness boosted.');
-      }
-      return nextState;
-    });
-  };
-
-  // 3. Add item to active shelf
-  const handleAddProduct = (newProduct) => {
-    if (activeProducts.some(p => p.id === newProduct.id)) {
-      triggerToast('Item is already active on your shelf!');
-      return;
-    }
-    setActiveProducts(prev => [{ ...newProduct, startDate: newProduct.startDate, durationDays: newProduct.durationDays || (newProduct.cycleWeeksTotal || 8) * 7, loggedToday: false, doseLogs: {}, streakDays: 0 }, ...prev]);
-    triggerToast(`Added ${newProduct.shortName} to your routine shelf!`);
-  };
-
-  const handleUpdateProduct = (updatedProduct) => {
-    setActiveProducts(prev => prev.map(p => p.id === updatedProduct.id ? { ...p, ...updatedProduct } : p));
-    setEditingProduct(null);
-    triggerToast('Product details updated.');
-  };
-
-  const handleRemoveProduct = (product) => {
-    if (window.confirm(`Remove ${product.shortName || product.name} from your routine?`)) {
-      setActiveProducts(prev => prev.filter(p => p.id !== product.id));
-      triggerToast('Product removed from your routine.');
-    }
-  };
-
-  // 5. Reset Demo to initial state
-  const handleResetDemo = () => {
-    if (window.confirm('Reset all routine doses, bottle levels, and habit streaks to default Be Bodywise demo state?')) {
-      localStorage.removeItem(STORAGE_KEY);
-      setActiveProducts(createDemoProducts());
-      setCheckedHabits({});
-      setSimulatedDay(3);
-      setShelfFilter('due_only');
-      triggerToast('Demo reset successfully to initial Be Bodywise clinical state!');
-    }
-  };
-
-  // ----------------------------------------------------
-  // Product display list:
-  // By default, show only items scheduled for the selected day.
-  // ----------------------------------------------------
-  const selectedDateKey = simulatedDateKey(simulatedDay);
-  const productsForSelectedDay = activeProducts.map(p => ({ ...p, loggedToday: Boolean(p.doseLogs?.[selectedDateKey]) }));
-  const productsScheduledToday = productsForSelectedDay.filter(p => p.frequencyDays.includes(simulatedDay));
-  const productsDisplayed = shelfFilter === 'due_only' ? productsScheduledToday : productsForSelectedDay;
-
-  // ----------------------------------------------------
-  // Derived Readiness Metrics for Today's Scheduled Care
-  // ----------------------------------------------------
-  const productsDueToday = productsScheduledToday;
-  const productsLoggedToday = productsDueToday.filter(p => p.loggedToday).length;
-
-  const todayConcerns = Array.from(new Set(productsDueToday.map(p => p.concernId)));
-
-  let habitsTotalCount = 0;
-  let habitsCheckedCount = 0;
-  todayConcerns.forEach(cKey => {
-    const group = SCIENCE_HABITS_BY_CONCERN[cKey];
-    if (group) {
-      group.habits.forEach(h => {
-        habitsTotalCount++;
-        if (checkedHabits[h.id]) habitsCheckedCount++;
-      });
-    }
-  });
-
-  return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#002742] flex flex-col items-center">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#002742] text-white px-4 py-3 rounded-2xl shadow-warm-lg border-2 border-[#DCEEF7] text-xs font-bold flex items-center gap-2 animate-fade-in">
-          <Sparkles className="w-4 h-4 text-[#BDE0F1]" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
-      {/* Main web application container */}
-      <div className="w-full max-w-5xl">
-        {/* ================= HEADER IN CRISP WHITE WITH #005995 ACCENTS ================= */}
-        <header className="sticky top-0 z-40 bg-white border-b-2 border-[#DCEEF7] px-4 sm:px-6 py-3.5 shadow-sm backdrop-blur-md">
-          <div className="flex items-center justify-between">
-            {/* Brand Logo & Clinical Subtitle in White Card with Blue Text */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#DCEEF7] border border-[#DCEEF7] flex items-center justify-center text-[#334155] shadow-sm">
-                <ShieldCheck className="w-6 h-6 text-[#334155]" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black tracking-widest uppercase text-[#334155]">
-                    BE BODYWISE
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#DCEEF7] text-[#334155] border border-[#DCEEF7]">
-                    CLINICAL
-                  </span>
-                </div>
-                <h1 className="text-base sm:text-lg font-black text-[#002742] leading-tight">
-                  Care Companion
-                </h1>
-              </div>
-            </div>
-
-            {/* Header Right Actions */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Reset Demo Button in White with Blue Border */}
-              <button
-                type="button"
-                onClick={handleResetDemo}
-                className="px-3 py-1.5 rounded-xl border-2 border-[#DCEEF7] hover:border-[#DCEEF7] bg-white hover:bg-[#F8FAFC] text-[#334155] text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
-                title="Reset all routine doses and bottle depletion levels to initial demo state"
-              >
-                <RotateCcw className="w-3.5 h-3.5 text-[#334155]" />
-                <span className="hidden sm:inline">Reset Demo</span>
-              </button>
-
-              {/* + Add Item Button */}
-              <button
-                type="button"
-                onClick={() => setIsAddDrawerOpen(true)}
-                className="px-3.5 py-1.5 rounded-xl bg-[#005995] hover:bg-[#00487A] text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md active:scale-95"
-              >
-                <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                <span className="hidden sm:inline">Add Item</span>
-              </button>
-
-            </div>
-          </div>
-        </header>
-
-        {/* ================= MAIN CONTENT ================= */}
-        <main className="p-4 sm:p-6 space-y-6">
-          {/* Welcome & Clinical Intent Banner in Crisp White with Blue Typography */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-white text-[#002742] shadow-warm border-2 border-[#DCEEF7]">
-            <div className="space-y-1 max-w-xl">
-              <span className="inline-block text-[11px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-[#DCEEF7] text-[#334155] border border-[#DCEEF7]">
-                Post-Purchase Clinical Companion
-              </span>
-              <h2 className="text-xl sm:text-2xl font-black text-[#002742] tracking-tight mt-1">
-                Your Routine & Dosage Protocol
-              </h2>
-              <p className="text-xs text-[#00487A] leading-relaxed font-medium">
-                Formulated actives deliver transformative results when applied at the correct frequency and clinical volume. Track your liquid depletion to prevent under-dosing.
-              </p>
-            </div>
-
-            {/* Quick summary stats in crisp white/light blue cards */}
-            <div className="flex items-center gap-3 self-start sm:self-auto pt-1 sm:pt-0">
-              <div className="px-4 py-2.5 rounded-2xl bg-[#F8FAFC] border border-[#DCEEF7] text-center shadow-sm">
-                <p className="text-[10px] font-bold text-[#334155] uppercase tracking-wider">Due Today</p>
-                <p className="text-base font-black text-[#002742]">{productsScheduledToday.length} of {activeProducts.length} Items</p>
-              </div>
-              <div className="px-4 py-2.5 rounded-2xl bg-[#F8FAFC] border border-[#DCEEF7] text-center shadow-sm">
-                <p className="text-[10px] font-bold text-[#334155] uppercase tracking-wider">Best Streak</p>
-                <p className="text-base font-black text-[#334155] flex items-center justify-center gap-1">
-                  <Flame className="w-4 h-4 fill-[#005995] text-[#334155]" />
-                  <span>{Math.max(...activeProducts.map(p => p.streakDays), 0)} Days</span>
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* 1. Smart Frequency Reminders & Highlighted Day Switcher */}
-          <section className="space-y-2">
-            <NotificationBanner 
-              currentDayOfWeek={simulatedDay}
-              activeProducts={productsForSelectedDay}
-              onSimulateDayChange={(newDay) => {
-                setSimulatedDay(newDay);
-                setShelfFilter('due_only');
-                triggerToast(`Simulating ${DAY_NAMES[newDay]} schedule.`);
-              }}
-              onQuickLogDose={handleLogDose}
-            />
-          </section>
-
-          {/* Daily Readiness Ring Card */}
-          <section>
-            <DailyReadinessRing 
-              productsLogged={productsLoggedToday}
-              productsTotal={productsDueToday.length}
-              habitsChecked={habitsCheckedCount}
-              habitsTotal={habitsTotalCount}
-            />
-          </section>
-
-          {/* 2. Active Routine Dashboard & Depleting Bottle Tracker Shelf */}
-          <section className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#334155]">
-                  Daily Protocols
-                </span>
-                <h3 className="text-lg font-black text-[#002742]">
-                  {shelfFilter === 'due_only'
-                    ? `Due Today on ${DAY_NAMES[simulatedDay]} (${productsScheduledToday.length} Items)`
-                    : `Active Routine Shelf for ${DAY_NAMES[simulatedDay]} (${activeProducts.length} Items)`}
-                </h3>
-              </div>
-
-              {/* Shelf Filter Toggle */}
-              <div className="flex items-center gap-2 self-start sm:self-auto">
-                <div className="flex items-center p-1 bg-white rounded-xl border-2 border-[#DCEEF7] text-xs font-bold shadow-sm">
-                  <button
-                    type="button"
-                    onClick={() => setShelfFilter('all')}
-                    className={`px-3 py-1.5 rounded-lg transition-all ${
-                      shelfFilter === 'all'
-                        ? 'bg-[#005995] text-white shadow-sm'
-                        : 'text-[#334155] hover:text-[#00385F]'
-                    }`}
-                  >
-                    All Shelf Items ({activeProducts.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShelfFilter('due_only')}
-                    className={`px-3 py-1.5 rounded-lg transition-all ${
-                      shelfFilter === 'due_only'
-                        ? 'bg-[#005995] text-white shadow-sm'
-                        : 'text-[#334155] hover:text-[#00385F]'
-                    }`}
-                  >
-                    Due Today Only ({productsScheduledToday.length})
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsAddDrawerOpen(true)}
-                  className="text-xs font-bold text-[#334155] hover:text-white bg-white hover:bg-[#005995] flex items-center gap-1 px-3 py-2 rounded-xl border-2 border-[#DCEEF7] transition-colors shadow-sm"
-                >
-                  <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                  <span>Add Item</span>
-                </button>
-              </div>
-            </div>
-
-            {/* List of Product Cards (Each with integrated Science-Backed Daily Boosters as a Dropdown) */}
-            <div className="space-y-5">
-              {productsDisplayed.map((product) => (
-                <ProductCard 
-                  key={product.id}
-                  product={product}
-                  currentDayOfWeek={simulatedDay}
-                  checkedHabits={checkedHabits}
-                  onToggleHabit={handleToggleHabit}
-                  onLogDose={handleLogDose}
-                  onOpenDetailModal={(prod) => setDetailModalProduct(prod)}
-                  onEditProduct={(prod) => setEditingProduct(prod)}
-                  onRemoveProduct={handleRemoveProduct}
-                />
-              ))}
-            </div>
-          </section>
-
-          {/* Educational Clinical Footer Card */}
-          <footer className="p-5 rounded-3xl bg-white border-2 border-[#DCEEF7] shadow-sm text-center space-y-2">
-            <div className="w-8 h-8 rounded-full bg-[#DCEEF7] flex items-center justify-center mx-auto text-[#334155] border border-[#DCEEF7]">
-              <ShieldCheck className="w-4 h-4 text-[#334155]" />
-            </div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-[#334155]">
-              The Be Bodywise Clinical Commitment
-            </h4>
-            <p className="text-xs text-[#00487A] max-w-lg mx-auto leading-relaxed font-medium">
-              Dermatologically tested formulations designed for female physiology. Active ingredients calibrated to deliver clinical cellular turnover over a 4–12 week period.
-            </p>
-            <div className="pt-2 text-[11px] text-[#334155] font-bold">
-              Bodywise Care Companion • Interactive Post-Purchase Experience
-            </div>
-          </footer>
-        </main>
-      </div>
-
-      {/* ================= MODALS & DRAWERS ================= */}
-      {/* 1. Add Product Drawer */}
-      <AddProductDrawer 
-        isOpen={isAddDrawerOpen}
-        onClose={() => setIsAddDrawerOpen(false)}
-        activeProductIds={activeProducts.map(p => p.id)}
-        onAddProduct={handleAddProduct}
-      />
-
-      {editingProduct && (
-        <ProductEditModal key={editingProduct.id} product={editingProduct} onClose={() => setEditingProduct(null)} onSave={handleUpdateProduct} />
-      )}
-
-      {/* 2. Deep Clinical Detail & Protocol Modal */}
-      {detailModalProduct && (
-        <ProductDetailModal 
-          product={detailModalProduct}
-          onClose={() => setDetailModalProduct(null)}
-        />
-      )}
-    </div>
-  );
+export default function App(){
+ const [activeProducts,setActiveProducts]=useState(()=>{try{const s=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');return s.activeProducts?.length?s.activeProducts.map(migrateProduct):seed()}catch{return seed()}});
+ const [habitState,setHabitState]=useState(()=>{try{const s=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');return s.habitState?.date===todayISO()?s.habitState:{date:todayISO(),checked:{}}}catch{return {date:todayISO(),checked:{}}}});
+ const [dismissedTips,setDismissedTips]=useState(()=>{try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}').dismissedTips||[]}catch{return []}});
+ const [snoozedUntil,setSnoozedUntil]=useState(()=>{try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}').snoozedUntil||0}catch{return 0}});
+ const [selectedDay,setSelectedDay]=useState(new Date().getDay());
+ const [drawerOpen,setDrawerOpen]=useState(false); const [chosenProduct,setChosenProduct]=useState(null); const [startChoice,setStartChoice]=useState('today'); const [pickedDate,setPickedDate]=useState(todayISO());
+ const [toast,setToast]=useState(null); const toastTimer=useRef(null); const [editing,setEditing]=useState(null); const [doneOpen,setDoneOpen]=useState(true);
+ const dialogRef=useRef(null);
+ useEffect(()=>{if(!chosenProduct)return;const node=dialogRef.current;const focusable=()=>node?.querySelectorAll('button,input,[tabindex=\"0\"]');const onKey=e=>{if(e.key==='Escape'){setChosenProduct(null);return}if(e.key==='Tab'){const els=[...(focusable()||[])].filter(x=>!x.disabled);if(!els.length)return;const first=els[0],last=els[els.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}};document.addEventListener('keydown',onKey);node?.querySelector('input')?.focus();return()=>document.removeEventListener('keydown',onKey)},[chosenProduct]);
+ const demo=new URLSearchParams(window.location.search).get('demo')==='1';
+ useEffect(()=>{localStorage.setItem(STORAGE_KEY,JSON.stringify({activeProducts,habitState,dismissedTips,snoozedUntil}))},[activeProducts,habitState,dismissedTips,snoozedUntil]);
+ useEffect(()=>{const refresh=()=>{if(habitState.date!==todayISO())setHabitState({date:todayISO(),checked:{}});setActiveProducts(list=>{let changed=false;const next=list.map(p=>{if(p.loggedToday&&p.lastLoggedDate&&p.lastLoggedDate!==todayISO()){changed=true;return {...p,loggedToday:false}}return p});return changed?next:list})};const timer=setInterval(refresh,60000);refresh();return()=>clearInterval(timer)},[habitState.date]);
+ const showToast=(message,undo)=>{clearTimeout(toastTimer.current);setToast({message,undo});toastTimer.current=setTimeout(()=>setToast(null),5000)};
+ const due=useMemo(()=>activeProducts.filter(p=>(p.frequencyDays||[]).includes(selectedDay)),[activeProducts,selectedDay]);
+ const pending=due.filter(p=>!p.loggedToday); const done=due.filter(p=>p.loggedToday);
+ const habitList=useMemo(()=>{const seen=new Map();due.forEach(p=>(p.boosters||[]).filter(h=>h.type==='daily'||h.type==='withDose').forEach(h=>{if(!seen.has(h.title.trim().toLowerCase()))seen.set(h.title.trim().toLowerCase(),habitFor(h))}));return [...seen.values()]},[due]);
+ const checkedCount=habitList.filter(h=>habitState.checked[h.id]).length;
+ const tips=useMemo(()=>{const seen=new Map();due.forEach(p=>(p.boosters||[]).filter(h=>h.type==='oneTime'&&!dismissedTips.includes(h.title.trim().toLowerCase())).forEach(h=>{if(!seen.has(h.title.trim().toLowerCase()))seen.set(h.title.trim().toLowerCase(),h)}));return [...seen.values()]},[due,dismissedTips]);
+ const supplies=activeProducts.map(p=>({product:p,supply:getSupplyStatus(p)}));
+ const alertProduct=supplies.find(x=>x.supply.status==='empty'||x.supply.status==='urgent')||supplies.find(x=>x.supply.status==='low');
+ const bannerVisible=alertProduct&&Date.now()>snoozedUntil;
+ const logDose=id=>{const previous=activeProducts.find(p=>p.id===id);if(!previous||previous.loggedToday||previous.remainingUses<=0)return;const loggedAt=new Date().toISOString();setActiveProducts(list=>list.map(p=>p.id!==id?p:{...p,remainingUses:Math.max(0,p.remainingUses-1),currentFillPercent:Math.max(0,Math.round((p.currentFillPercent||0)-(p.totalApplications?100/p.totalApplications:0))),loggedToday:true,lastLoggedDate:todayISO(),doseLogs:[...(p.doseLogs||[]),{date:todayISO(),at:loggedAt}]}));showToast('Dose logged',()=>{setActiveProducts(list=>list.map(p=>p.id!==id?p:{...previous,loggedToday:false,doseLogs:(previous.doseLogs||[])}));setToast(null)});};
+ const undoDose=id=>{const p=activeProducts.find(x=>x.id===id);if(!p)return;setActiveProducts(list=>list.map(x=>x.id===id?{...x,remainingUses:x.remainingUses+1,currentFillPercent:Math.min(100,(x.currentFillPercent||0)+(x.totalVolumeMl?(x.dosePerUseMl/x.totalVolumeMl)*100:0)),loggedToday:false,doseLogs:(x.doseLogs||[]).slice(0,-1)}:x));showToast('Dose undone');};
+ const selectProduct=p=>{setChosenProduct(p);setStartChoice('today');setPickedDate(todayISO());setDrawerOpen(false)};
+ const confirmAdd=()=>{if(!chosenProduct)return;const date=startChoice==='today'?todayISO():startChoice==='yesterday'?localISODate(new Date(Date.now()-86400000)):pickedDate;setActiveProducts(list=>[migrateProduct({...chosenProduct,startDate:date,durationDays:(chosenProduct.cycleWeeksTotal||8)*7,remainingUses:chosenProduct.totalApplications||30,loggedToday:false}),...list]);setChosenProduct(null);showToast('Added to your routine')};
+ const removeProduct=p=>{if(window.confirm(`Remove ${p.shortName||p.name} from your routine?`)){setActiveProducts(list=>list.filter(x=>x.id!==p.id));showToast('Product removed')}};
+ const toggleHabit=id=>setHabitState(s=>({...s,checked:{...s.checked,[id]:!s.checked[id]}}));
+ const resetDemo=()=>{if(window.confirm('Reset the demo routine?')){setActiveProducts(seed());setHabitState({date:todayISO(),checked:{}});setDismissedTips([]);setSnoozedUntil(0);showToast('Demo reset')}};
+ const today=new Date(); const dateLine=today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'});
+ const nextDue=activeProducts.flatMap(p=>(p.frequencyDays||[]).map(day=>({p,day,offset:(day-selectedDay+7)%7||7}))).sort((a,b)=>a.offset-b.offset)[0];
+ return <div className="app-shell">
+  <header className="site-header"><div className="header-inner"><div className="brand"><span className="brand-mark"><Droplet size={22}/></span><div><strong>BE BODYWISE</strong><span>Care Companion</span></div></div><div className="header-actions">{demo&&<button className="secondary-button" onClick={resetDemo}><RotateCcw size={15}/>Reset Demo</button>}<button className="add-button" aria-label="Add product" onClick={()=>setDrawerOpen(true)}><Plus size={20}/></button></div></div></header>
+  <main className="page-container"><div className="page-heading"><div><p className="date-line">{dateLine}</p><h1>Today</h1></div><div className="summary-count"><strong>{done.length} of {due.length} done</strong><span>{pending[0]?`Next: ${pending[0].shortName||pending[0].name}`:'All product doses complete'}</span></div></div>
+   <nav className="day-selector" aria-label="Choose day">{weekdayNames.map((d,i)=><button key={d} className={selectedDay===i?'selected':''} aria-pressed={selectedDay===i} onClick={()=>setSelectedDay(i)}>{d}</button>)}</nav>
+   <div className="dashboard-grid"><section className="main-column">
+    {bannerVisible&&<section className={`reorder-banner ${alertProduct.supply.status==='empty'?'red':''}`}><div className="banner-icon"><AlertTriangle size={19}/></div><div className="banner-copy"><h2>{alertProduct.supply.status==='empty'?'Out of doses':alertProduct.supply.status==='urgent'?'Reorder now':`${alertProduct.product.shortName||alertProduct.product.name} runs out around ${formatDate(alertProduct.supply.runOutDate)}`}</h2><p>{alertProduct.supply.dosesLeft} doses left at {alertProduct.supply.dosesPerWeek===7?'1 a day':`${alertProduct.supply.dosesPerWeek} a week`}. Order by {formatDate(alertProduct.supply.reorderByDate)} to avoid a gap.</p></div><div className="banner-actions"><button className="secondary-button" onClick={()=>window.open(alertProduct.product.storeUrl||STORE_URL_PLACEHOLDER,'_blank','noopener,noreferrer')}>Reorder</button><button className="text-button" onClick={()=>{const until=Date.now()+86400000;setSnoozedUntil(until);showToast('Reminder snoozed for 24 hours')}}>Remind me later</button></div></section>}
+    <div className="section-heading"><h2>To do</h2><span>{pending.length}</span></div>
+    {pending.length?pending.map(p=><ProductCard key={p.id} product={p} onLogDose={logDose} onEdit={setEditing} onRemove={removeProduct}/>):<div className="empty-state"><div className="empty-icon"><CheckCircle2 size={25}/></div><h3>{due.length?'You are all caught up':'Nothing due today'}</h3><p>{due.length?'Your product doses are complete.':'Your next product dose is '+(nextDue?weekdayNames[nextDue.day]:'coming up soon')+'.'}</p><button className="secondary-button" onClick={()=>setDrawerOpen(true)}><Plus size={16}/>Add product</button></div>}
+    {done.length>0&&<section className="done-section"><button className="section-heading done-toggle" aria-expanded={doneOpen} onClick={()=>setDoneOpen(v=>!v)}><h2>Done today</h2><span>{done.length}</span></button>{doneOpen&&done.map(p=><div className="done-row" key={p.id}><span className="done-check"><Check size={17}/></span><div className="done-copy"><strong>{p.shortName||p.name}</strong><span>Logged {new Date(p.doseLogs?.at(-1)?.at||Date.now()).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}).toLowerCase()} · next dose {weekdayNames[(selectedDay+Array.from({length:7},(_,i)=>i+1).find(offset=>p.frequencyDays?.includes((selectedDay+offset)%7)||p.frequencyType==='daily')||1)%7]}</span></div><button className="text-button" onClick={()=>undoDose(p.id)}>Undo</button></div>)}</section>}
+   </section>
+   <aside className="sidebar"><section className="side-panel habits-panel"><div className="side-heading"><h2>Habits for today</h2><strong>{checkedCount} of {habitList.length}</strong></div>{habitList.length?habitList.map(h=><label className="habit-row" key={h.id}><input type="checkbox" checked={!!habitState.checked[h.id]} onChange={()=>toggleHabit(h.id)}/><span>{h.title}</span></label>):<p className="muted-copy">No habits scheduled for today.</p>}
+    {tips.length>0&&<div className="tips-list">{tips.map(t=><div className="tip-row" key={t.id}><p>{t.title}</p><button className="text-button" onClick={()=>setDismissedTips(list=>[...list,t.title.trim().toLowerCase()])}>Got it</button></div>)}</div>}
+   </section><section className="side-panel supply-panel"><div className="side-heading"><h2>Supply</h2></div>{supplies.map(({product,supply})=><div className="supply-item" key={product.id}><div className="supply-item-head"><strong>{product.shortName||product.name}</strong><span>{supply.dosesLeft} doses left</span></div><div className={`supply-track ${supply.status}`}><span style={{width:`${Math.min(100,supply.dosesLeft/Math.max(1,product.totalApplications||supply.dosesLeft)*100)}%`}}/></div><p>Runs out {formatDate(supply.runOutDate)}</p></div>)}</section></aside>
+   </div>
+   {demo&&<div className="demo-tools"><span>Demo tools</span><button onClick={()=>setSelectedDay(day=>(day+1)%7)}>Simulate Next Reminder</button></div>}
+  </main>
+  <AddProductDrawer isOpen={drawerOpen} onClose={()=>setDrawerOpen(false)} activeProductIds={activeProducts.map(p=>p.id)} onSelectProduct={selectProduct}/>
+  {chosenProduct&&<div className="overlay modal-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)setChosenProduct(null)}}><section className="start-dialog" role="dialog" aria-modal="true" aria-labelledby="start-title" ref={dialogRef}><button className="dialog-close icon-button" aria-label="Close" onClick={()=>setChosenProduct(null)}><X/></button><p className="eyebrow">Add to your routine</p><h2 id="start-title">When did you start?</h2><div className="selected-product"><strong>{chosenProduct.shortName||chosenProduct.name}</strong><span>{chosenProduct.frequencyLabel} · {chosenProduct.visualDosageValue}</span></div><div className="start-options"><label><input type="radio" name="start" checked={startChoice==='today'} onChange={()=>setStartChoice('today')}/>Today</label><label><input type="radio" name="start" checked={startChoice==='yesterday'} onChange={()=>setStartChoice('yesterday')}/>Yesterday</label><label><input type="radio" name="start" checked={startChoice==='pick'} onChange={()=>setStartChoice('pick')}/>Pick date</label></div>{startChoice==='pick'&&<input className="date-input" type="date" max={todayISO()} value={pickedDate} onChange={e=>setPickedDate(e.target.value)}/>}<p className="date-helper">Started {formatDate(startChoice==='today'?todayISO():startChoice==='yesterday'?localISODate(new Date(Date.now()-86400000)):pickedDate)} · day {Math.max(1,Math.floor((new Date(`${todayISO()}T00:00:00`)-new Date(`${(startChoice==='today'?todayISO():startChoice==='yesterday'?localISODate(new Date(Date.now()-86400000)):pickedDate)}T00:00:00`))/86400000)+1)} of your journey</p><button className="primary-button confirm-add" onClick={confirmAdd}>Add to routine</button></section></div>}
+  {editing&&<ProductEditModal product={editing} onClose={()=>setEditing(null)} onSave={p=>{setActiveProducts(list=>list.map(x=>x.id===p.id?migrateProduct({...x,...p}):x));setEditing(null);showToast('Product details updated')}}/>}
+  {toast&&<div className="toast" role="status" aria-live="polite"><span>{toast.message}</span>{toast.undo&&<button onClick={toast.undo}>Undo</button>}</div>}
+ </div>
 }
