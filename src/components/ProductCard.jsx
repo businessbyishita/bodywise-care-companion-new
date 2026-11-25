@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Check, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, Check, Pencil, Trash2 } from 'lucide-react';
 import { getSupplyStatus, formatDate } from '../utils';
 import DepletingBottleSvg from './DepletingBottleSvg';
 
 export default function ProductCard({ product, selectedDate, onLogDose, onEdit, onRemove }) {
   const [details, setDetails] = useState(false);
-  const [journeyOpen, setJourneyOpen] = useState(false);
   const supply = getSupplyStatus(product);
   const start = new Date(`${product.startDate || new Date().toISOString().slice(0,10)}T00:00:00`);
   const selected = new Date(`${selectedDate}T00:00:00`);
@@ -15,7 +14,12 @@ export default function ProductCard({ product, selectedDate, onLogDose, onEdit, 
   const weekNumber = Math.floor(elapsed/7)+1;
   const pct = Math.min(100, Math.round((dayNumber/duration)*100));
   const fill = Math.max(0, Math.min(100, Math.round((supply.dosesLeft/Math.max(1,product.totalApplications||supply.dosesLeft))*100)));
-  const milestone = [...(product.timelineMilestones||[])].filter(m=>m.week<=weekNumber).sort((a,b)=>b.week-a.week)[0] || product.timelineMilestones?.[0];
+  const milestones = product.timelineMilestones || [];
+  const totalWeeks = Math.max(1, product.cycleWeeksTotal || Math.ceil(duration / 7));
+  const weekTrail = Array.from({ length: totalWeeks }, (_, index) => {
+    const week = index + 1;
+    return { week, milestone: milestones.find(item => item.week === week) || null };
+  });
   const logged = (product.doseLogs||[]).some(log=>log.date===selectedDate);
   const future = selectedDate > new Date().toISOString().slice(0,10);
   const schedule = `${product.frequencyLabel || 'As scheduled'}${product.timeOfDay ? ` · ${product.timeOfDay}` : ''}`;
@@ -32,7 +36,28 @@ export default function ProductCard({ product, selectedDate, onLogDose, onEdit, 
     </div>
     <div className="product-actions"><button className="text-button" aria-expanded={details} onClick={()=>setDetails(v=>!v)}>Product details {details?<ChevronUp size={15}/>:<ChevronDown size={15}/>}</button><div className="action-buttons"><button className="action-button" onClick={()=>onEdit(product)}><Pencil size={14}/>Edit start date</button><button className="action-button remove-action" onClick={()=>onRemove(product)}><Trash2 size={14}/>Remove</button></div></div>
     {details && <div className="details-panel">
-      <section className="journey-panel"><button className="journey-panel-toggle" onClick={()=>setJourneyOpen(v=>!v)} aria-expanded={journeyOpen}><span>Your journey · 1% better, every day</span>{journeyOpen?<ChevronUp size={15}/>:<ChevronDown size={15}/>}</button><p>Started {formatDate(product.startDate)} · Day {dayNumber} · Week {weekNumber} of {Math.ceil(duration/7)}</p>{journeyOpen&&<div className="journey-milestone"><strong>{milestone?.title || 'Consistency is progress'}</strong><span>{milestone?.desc || 'Keep following your routine and give your skin time to respond.'}</span></div>}</section>
+      <section className="week-trail-section">
+        <div className="week-trail-heading">
+          <div>
+            <h4>Your product journey</h4>
+            <p>Week-by-week milestones across your {totalWeeks}-week routine</p>
+          </div>
+          <span className="week-trail-progress">Week {Math.min(weekNumber, totalWeeks)} of {totalWeeks}</span>
+        </div>
+        <div className="week-trail">
+          {weekTrail.map(({ week, milestone: item }) => {
+            const isCurrent = week === Math.min(weekNumber, totalWeeks);
+            const isComplete = week < weekNumber;
+            return <article className={`week-trail-item ${isCurrent ? 'current' : ''} ${isComplete ? 'complete' : ''}`} key={week}>
+              <div className="week-trail-marker"><span>{week}</span></div>
+              <div className="week-trail-copy">
+                <div className="week-trail-title"><strong>Week {week}: {item?.title || 'Building consistency'}</strong>{isCurrent && <span className="current-week-badge">You're here</span>}</div>
+                <p>{item?.desc || 'Continue following your recommended schedule. This week builds consistency as you progress toward the next product milestone.'}</p>
+              </div>
+            </article>;
+          })}
+        </div>
+      </section>
       <section><h4>Dosage guide</h4><p>{product.doseDescription || product.visualDosageValue}</p>{(product.boosters||[]).filter(h=>h.type==='withDose').map((h,i)=><span className="detail-step" key={h.id}>{i+1}. {h.title}</span>)}</section>
       <section><h4>The science behind your routine</h4><p>{product.whyRationingFails || product.tagline || 'Consistency helps you follow a routine long enough to understand how your skin responds.'}</p>{(product.clinicalTips||[]).map((tip,i)=><span className="detail-step application-tip" key={`tip-${i}`}>{tip}</span>)}</section>
     </div>}
