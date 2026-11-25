@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Check, Droplet, RotateCcw, X, AlertTriangle, CheckCircle2, CalendarDays } from 'lucide-react';
-import { DEFAULT_ACTIVE_PRODUCTS } from './data/products';
+import { DEFAULT_ACTIVE_PRODUCTS, OFFICIAL_PRODUCT_NAMES } from './data/products';
 import { SCIENCE_HABITS_BY_CONCERN } from './data/habits';
 import ProductCard from './components/ProductCard';
 import AddProductDrawer from './components/AddProductDrawer';
@@ -9,7 +9,7 @@ import { getSupplyStatus, formatDate, localISODate, STORE_URL_PLACEHOLDER } from
 
 const STORAGE_KEY='bodywise_care_companion_state_v9';
 const todayISO=()=>localISODate(new Date());
-const migrateProduct=p=>({...p,startDate:p.startDate||todayISO(),durationDays:p.durationDays||(p.cycleWeeksTotal||8)*7,remainingUses:Math.max(0,Number(p.remainingUses??p.totalApplications??0)),doseLogs:p.doseLogs||(p.loggedToday?[{date:p.lastLoggedDate||todayISO(),at:new Date().toISOString()}]:[]),storeUrl:p.storeUrl||STORE_URL_PLACEHOLDER,boosters:(p.boosters||SCIENCE_HABITS_BY_CONCERN[p.concernId]?.habits||[]).map(h=>({...h,type:h.type||(['habit-dry-60s','habit-scalp-massage','habit-pat-dont-rub','habit-damp-skin-application'].includes(h.id)?'withDose':['habit-skip-loofah','habit-cotton-wear'].includes(h.id)?'oneTime':'daily')}))});
+const migrateProduct=p=>({...p,name:OFFICIAL_PRODUCT_NAMES[p.id]||p.name,shortName:OFFICIAL_PRODUCT_NAMES[p.id]||p.shortName||p.name,startDate:p.startDate||todayISO(),durationDays:p.durationDays||(p.cycleWeeksTotal||8)*7,remainingUses:Math.max(0,Number(p.remainingUses??p.totalApplications??0)),doseLogs:p.doseLogs||(p.loggedToday?[{date:p.lastLoggedDate||todayISO(),at:new Date().toISOString()}]:[]),storeUrl:p.storeUrl||STORE_URL_PLACEHOLDER,boosters:(p.boosters||SCIENCE_HABITS_BY_CONCERN[p.concernId]?.habits||[]).map(h=>({...h,type:h.type||(['habit-dry-60s','habit-scalp-massage','habit-pat-dont-rub','habit-damp-skin-application'].includes(h.id)?'withDose':['habit-skip-loofah','habit-cotton-wear'].includes(h.id)?'oneTime':'daily')}))});
 const seed=()=>DEFAULT_ACTIVE_PRODUCTS.slice(0,2).map((p,i)=>migrateProduct({...p,startDate:localISODate(new Date(Date.now()-(i?21:11)*86400000)),remainingUses:p.remainingUses||p.totalApplications||12,doseLogs:[]}));
 const weekdayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const habitFor=h=>({id:h.title.trim().toLowerCase(),title:h.title,science:h.science,shortDesc:h.shortDesc,type:h.type||'daily'});
