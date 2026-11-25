@@ -1,10 +1,23 @@
 // Be Bodywise Clinical Care Companion Product Catalog & Routine Presets
 
+// Canonical display names matched to Be Bodywise's current product listings.
+export const OFFICIAL_PRODUCT_NAMES = {
+  'aha-bha-roll-on': '4% AHA BHA Underarm Roll On - 50 mL - No Fragrance',
+  'salicylic-body-wash': '1% Salicylic Acid Body Wash - 250 mL',
+  'redensyl-hair-serum': 'Advanced Hair Growth Serum (30ml)',
+  'niacinamide-body-lotion': '10% Niacinamide Body Lotion',
+  'biotin-hair-gummies': 'Biotin Hair Gummies (30)',
+  'salicylic-face-serum': '2% Salicylic Acid Face Serum',
+  'kojic-acid-body-cream': 'Pigmentation Repair Cream',
+  'lactic-intimate-wash': 'Intimate Wash',
+};
+
+
 export const DEFAULT_ACTIVE_PRODUCTS = [
   {
     id: 'aha-bha-roll-on',
-    name: 'AHA BHA Underarm Roll-On (4% AHA + 2% BHA)',
-    shortName: 'AHA BHA Roll-On',
+    name: '4% AHA BHA Underarm Roll On - 50 mL - No Fragrance',
+    shortName: '4% AHA BHA Underarm Roll On - 50 mL - No Fragrance',
     tagline: 'Exfoliates dead skin, controls odor & reduces underarm pigmentation',
     category: 'Underarms & Body',
     concern: 'Underarm Pigmentation & Odor',
@@ -48,8 +61,8 @@ export const DEFAULT_ACTIVE_PRODUCTS = [
   },
   {
     id: 'salicylic-body-wash',
-    name: '1% Salicylic Acid Daily Body Wash',
-    shortName: 'Salicylic Body Wash',
+    name: '1% Salicylic Acid Body Wash - 250 mL',
+    shortName: '1% Salicylic Acid Body Wash - 250 mL',
     tagline: 'Decongests body pores, treats bacne & smooths "strawberry legs" (KP)',
     category: 'Body Care',
     concern: 'Body Acne & Keratosis Pilaris',
@@ -92,8 +105,8 @@ export const DEFAULT_ACTIVE_PRODUCTS = [
   },
   {
     id: 'redensyl-hair-serum',
-    name: 'Rosemary & Redensyl Hair Growth Serum (3% Redensyl + 3% Procapil)',
-    shortName: 'Rosemary & Redensyl Serum',
+    name: 'Advanced Hair Growth Serum (30ml)',
+    shortName: 'Advanced Hair Growth Serum (30ml)',
     tagline: 'Activates hair follicle stem cells, reduces shedding & promotes dense regrowth',
     category: 'Hair Care',
     concern: 'Hair Fall & Thinning',
@@ -139,8 +152,8 @@ export const DEFAULT_ACTIVE_PRODUCTS = [
 export const PRESET_CATALOG_PRODUCTS = [
   {
     id: 'niacinamide-body-lotion',
-    name: '10% Niacinamide Clarifying Body Lotion',
-    shortName: '10% Niacinamide Lotion',
+    name: '10% Niacinamide Body Lotion',
+    shortName: '10% Niacinamide Body Lotion',
     tagline: 'Repairs lipid barrier, fades uneven sun spots & evens tone on knees and elbows',
     category: 'Body Care',
     concern: 'Uneven Skin Tone & Dark Spots',
@@ -178,8 +191,8 @@ export const PRESET_CATALOG_PRODUCTS = [
   },
   {
     id: 'biotin-hair-gummies',
-    name: 'Biotin & Multivitamin Hair Gummies (5000 mcg Biotin)',
-    shortName: 'Biotin Hair Gummies',
+    name: 'Biotin Hair Gummies (30)',
+    shortName: 'Biotin Hair Gummies (30)',
     tagline: 'Strengthens keratin infrastructure, prevents brittle breakage & boosts nail strength',
     category: 'Hair & Nutrition',
     concern: 'Hair Fall & Thinning',
@@ -217,8 +230,8 @@ export const PRESET_CATALOG_PRODUCTS = [
   },
   {
     id: 'salicylic-face-serum',
-    name: '2% Salicylic Acid Face Serum + Zinc PCA',
-    shortName: '2% Salicylic Face Serum',
+    name: '2% Salicylic Acid Face Serum',
+    shortName: '2% Salicylic Acid Face Serum',
     tagline: 'Treats blackheads, controls T-zone oiliness & calms hormonal breakouts',
     category: 'Face Care',
     concern: 'Facial Acne & Clogged Pores',
@@ -256,8 +269,8 @@ export const PRESET_CATALOG_PRODUCTS = [
   },
   {
     id: 'kojic-acid-body-cream',
-    name: '2% Kojic Acid Body Cream with L-Ascorbic Acid',
-    shortName: '2% Kojic Body Cream',
+    name: 'Pigmentation Repair Cream',
+    shortName: 'Pigmentation Repair Cream',
     tagline: 'Fades dark inner thigh friction, neck discoloration & post-acne marks',
     category: 'Body Care',
     concern: 'Body Hyperpigmentation',
@@ -295,8 +308,8 @@ export const PRESET_CATALOG_PRODUCTS = [
   },
   {
     id: 'lactic-intimate-wash',
-    name: 'Intimate Wash with 1% Lactic Acid + Tea Tree',
-    shortName: '1% Lactic Intimate Wash',
+    name: 'Intimate Wash',
+    shortName: 'Intimate Wash',
     tagline: 'Maintains ideal 3.5-4.5 intimate pH, prevents itching & controls odor',
     category: 'Intimate Care',
     concern: 'Intimate pH Balance & Odor',
