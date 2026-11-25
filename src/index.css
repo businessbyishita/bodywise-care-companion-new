@@ -70,3 +70,73 @@ body{background:#F7F9FB}
 }
 .application-best-practices h4{font-size:11px!important;letter-spacing:.08em}
 .application-best-practices li{font-size:11px!important;line-height:1.45}
+
+
+/* FINAL: Compact Today summary */
+.journey-overview-compact {
+  padding: 9px 18px !important;
+  min-height: 0 !important;
+  margin-bottom: 10px !important;
+  gap: 12px !important;
+  border-radius: 14px !important;
+}
+
+.journey-overview-compact .journey-summary-copy {
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  align-items: baseline !important;
+  column-gap: 9px !important;
+  row-gap: 0 !important;
+}
+
+.journey-overview-compact .date-line {
+  grid-column: 1 / -1 !important;
+  margin: 0 !important;
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+}
+
+.journey-overview-compact h2 {
+  font-size: 17px !important;
+  line-height: 1.15 !important;
+  margin: 0 !important;
+}
+
+.journey-overview-compact .journey-kicker {
+  font-size: 10px !important;
+  line-height: 1.15 !important;
+}
+
+.journey-overview-compact .journey-stats {
+  gap: 16px !important;
+}
+
+.journey-overview-compact .journey-stats div {
+  gap: 2px !important;
+  min-width: 55px !important;
+}
+
+.journey-overview-compact .journey-stats strong {
+  font-size: 17px !important;
+  line-height: 1.1 !important;
+}
+
+.journey-overview-compact .journey-stats span {
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+}
+
+@media (max-width: 640px) {
+  .journey-overview-compact {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+  }
+
+  .journey-overview-compact .journey-stats {
+    gap: 8px !important;
+  }
+
+  .journey-overview-compact .journey-stats div {
+    min-width: 42px !important;
+  }
+}
