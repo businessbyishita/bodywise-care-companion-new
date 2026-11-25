@@ -164,3 +164,14 @@ export const SCIENCE_HABITS_BY_CONCERN = {
     ]
   }
 };
+
+// Booster type metadata used by the shared habit checklist and product Details.
+Object.values(SCIENCE_HABITS_BY_CONCERN).forEach(group => {
+  group.habits.forEach(habit => {
+    habit.type = ['habit-dry-60s', 'habit-scalp-massage', 'habit-pat-dont-rub', 'habit-damp-skin-application'].includes(habit.id)
+      ? 'withDose'
+      : ['habit-skip-loofah', 'habit-cotton-wear'].includes(habit.id)
+        ? 'oneTime'
+        : 'daily';
+  });
+});
