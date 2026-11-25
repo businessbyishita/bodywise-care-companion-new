@@ -26,3 +26,47 @@ body{background:#F7F9FB}
 .done-section{margin-top:24px}.support-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;margin-top:26px}.side-panel{border:1px solid #DCE6EC;border-radius:17px;padding:18px;background:#fff}.side-heading{align-items:flex-start}.side-heading h2{font-size:17px;font-weight:750!important}.side-heading .eyebrow{font-size:10px;letter-spacing:.12em;margin-bottom:4px}.habit-card{border-top:1px solid #EDF1F4;padding:8px 0 10px}.habit-row{border:0;padding:4px 0 2px;align-items:flex-start}.habit-row b{font-size:12px;font-weight:700!important;display:block;color:#23475B}.habit-row small{font-size:10px;display:block;color:#748590;margin-top:3px;line-height:1.45}.science-toggle{display:inline-flex;align-items:center;gap:5px;margin:5px 0 0 31px;padding:4px 0;background:none;border:0;color:#0877A9;font-size:10px;font-weight:700}.science-copy{margin:5px 0 2px 31px;padding:9px 10px;background:#F4F8FA;border-radius:8px;color:#5D7280;font-size:10px;line-height:1.6}.supply-item-head strong{font-weight:700}.supply-item-head span{font-size:11px}.supply-item p{font-size:11px}.reorder-banner{border-radius:14px}.hero-heading+.journey-overview{margin-top:0}
 .edit-date-dialog{position:relative;width:min(440px,calc(100vw - 32px));background:#fff;border-radius:18px;padding:28px;box-shadow:0 20px 60px #001B2B40}.edit-date-dialog h2{font-size:23px;font-weight:800!important;margin:0 0 6px}.edit-product-name{font-size:13px;color:#557181;margin:0 0 22px}.date-edit-label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;margin-bottom:9px}.edit-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}.edit-dialog-actions .primary-button{font-size:12px}
 @media(max-width:700px){.header-inner{height:70px}.page-container{padding:25px 14px 50px}.hero-heading h1{font-size:29px}.journey-overview{display:block;padding:18px}.journey-stats{justify-content:space-between;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid #E8EEF2}.journey-stats strong{font-size:18px}.day-selector{gap:5px}.day-selector button{padding:8px 2px}.day-selector button strong{font-size:15px}.product-card{padding:14px}.product-card-main{gap:10px;align-items:flex-start}.bottle-visual{width:76px;min-width:76px;padding:0}.bottle-visual>div{transform:scale(.68)}.product-top{display:block}.dose-chip{display:inline-block;margin-top:7px}.product-heading h3{font-size:15px}.product-progress-label{font-size:10px;margin-top:12px}.bottle-caption{font-size:9px;flex-wrap:wrap}.action-button{padding:7px;font-size:10px}.support-grid{grid-template-columns:1fr}.banner-actions{flex-direction:column;align-items:flex-end}.reorder-banner{align-items:flex-start}.summary-count{text-align:left}}
+
+/* Readability pass: larger, calmer type and clearer product actions */
+.product-card-main{gap:22px;align-items:center}
+.bottle-visual{width:116px;min-width:116px;min-height:158px;padding:4px;overflow:visible}
+.bottle-visual>div{transform:scale(.9);transform-origin:center}
+.product-heading h3{font-size:20px!important;line-height:1.25}
+.product-heading p{font-size:14px!important;line-height:1.45;color:#526B7A}
+.dose-chip{font-size:13px!important;padding:7px 11px}
+.product-progress-label{font-size:14px!important;line-height:1.4;margin-top:16px}
+.bottle-caption{font-size:13px!important;line-height:1.4;margin-top:9px;color:#526B7A}
+.log-button{width:100%!important;min-height:44px;margin:13px 0 0;padding:11px 18px;font-size:16px!important;line-height:1.2}
+.logged-state{font-size:14px!important;min-height:44px}
+.product-actions .text-button{font-size:14px!important}
+.action-button{font-size:13px!important;padding:8px 11px}
+.details-panel section h4{font-size:15px!important;line-height:1.35;margin-bottom:7px}
+.details-panel section p{font-size:14px!important;line-height:1.65}
+.detail-step{font-size:13px;line-height:1.5}
+.application-tip{font-size:11px!important;line-height:1.45;color:#6C7E89}
+.journey-panel-toggle{font-size:14px!important}
+.journey-panel>p{font-size:13px!important}
+.journey-milestone strong{font-size:14px!important}
+.journey-milestone span{font-size:13px!important}
+.side-heading h2{font-size:19px!important}
+.side-heading .eyebrow{font-size:11px!important}
+.habit-row b{font-size:14px!important;line-height:1.45}
+.habit-row small{font-size:12px!important;line-height:1.5}
+.science-toggle{font-size:13px!important;margin-left:32px}
+.science-copy{font-size:13px!important;line-height:1.6;margin-left:32px}
+.supply-item-head{font-size:14px!important}
+.supply-item-head span,.supply-item p{font-size:13px!important}
+.product-progress-label b{font-weight:750!important}
+@media(max-width:700px){
+  .bottle-visual{width:82px;min-width:82px;min-height:130px}
+  .bottle-visual>div{transform:scale(.72)}
+  .product-heading h3{font-size:17px!important}
+  .product-heading p{font-size:12px!important}
+  .product-progress-label{font-size:12px!important;gap:7px}
+  .bottle-caption{font-size:11px!important;flex-wrap:wrap}
+  .log-button{font-size:14px!important;min-height:42px}
+  .habit-row b{font-size:13px!important}
+  .science-copy{font-size:12px!important}
+}
+.application-best-practices h4{font-size:11px!important;letter-spacing:.08em}
+.application-best-practices li{font-size:11px!important;line-height:1.45}
