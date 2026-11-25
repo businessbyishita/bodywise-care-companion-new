@@ -72,71 +72,35 @@ body{background:#F7F9FB}
 .application-best-practices li{font-size:11px!important;line-height:1.45}
 
 
-/* FINAL: Compact Today summary */
-.journey-overview-compact {
-  padding: 9px 18px !important;
-  min-height: 0 !important;
-  margin-bottom: 10px !important;
-  gap: 12px !important;
-  border-radius: 14px !important;
-}
+/* Compact daily summary: keeps the original seven-day selector prominent. */
+.journey-overview-compact{padding:11px 18px;margin-bottom:10px;min-height:0;gap:16px;border-radius:15px}
+.journey-overview-compact .journey-summary-copy{display:grid;grid-template-columns:auto auto;align-items:baseline;column-gap:10px;row-gap:1px}
+.journey-overview-compact .date-line{grid-column:1/-1;margin:0;font-size:11px;line-height:1.25;color:#647887}
+.journey-overview-compact h2{font-size:18px;line-height:1.2;margin:0}
+.journey-overview-compact .journey-kicker{font-size:11px;line-height:1.2}
+.journey-overview-compact .journey-stats{gap:18px}
+.journey-overview-compact .journey-stats div{gap:2px;min-width:58px}
+.journey-overview-compact .journey-stats strong{font-size:18px;line-height:1.1}
+.journey-overview-compact .journey-stats span{font-size:9px;line-height:1.2;letter-spacing:.045em}
+@media(max-width:640px){.journey-overview-compact{align-items:flex-start;padding:11px 13px;gap:10px}.journey-overview-compact .journey-stats{gap:9px}.journey-overview-compact .journey-stats div{min-width:45px}.journey-overview-compact .journey-stats strong{font-size:16px}.journey-overview-compact .journey-stats span{font-size:8px}}
 
-.journey-overview-compact .journey-summary-copy {
-  display: grid !important;
-  grid-template-columns: auto auto !important;
-  align-items: baseline !important;
-  column-gap: 9px !important;
-  row-gap: 0 !important;
-}
 
-.journey-overview-compact .date-line {
-  grid-column: 1 / -1 !important;
-  margin: 0 !important;
-  font-size: 10px !important;
-  line-height: 1.2 !important;
-}
-
-.journey-overview-compact h2 {
-  font-size: 17px !important;
-  line-height: 1.15 !important;
-  margin: 0 !important;
-}
-
-.journey-overview-compact .journey-kicker {
-  font-size: 10px !important;
-  line-height: 1.15 !important;
-}
-
-.journey-overview-compact .journey-stats {
-  gap: 16px !important;
-}
-
-.journey-overview-compact .journey-stats div {
-  gap: 2px !important;
-  min-width: 55px !important;
-}
-
-.journey-overview-compact .journey-stats strong {
-  font-size: 17px !important;
-  line-height: 1.1 !important;
-}
-
-.journey-overview-compact .journey-stats span {
-  font-size: 9px !important;
-  line-height: 1.2 !important;
-}
-
-@media (max-width: 640px) {
-  .journey-overview-compact {
-    padding: 10px 12px !important;
-    gap: 8px !important;
-  }
-
-  .journey-overview-compact .journey-stats {
-    gap: 8px !important;
-  }
-
-  .journey-overview-compact .journey-stats div {
-    min-width: 42px !important;
-  }
-}
+/* Product details: full week-by-week journey trail */
+.week-trail-section{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+.week-trail-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.week-trail-heading h4{font-size:16px!important;margin:0 0 3px!important;color:var(--navy)}
+.week-trail-heading p{font-size:12px!important;line-height:1.4!important;color:var(--muted);margin:0!important}
+.week-trail-progress{flex:0 0 auto;background:#EAF3F8;color:#145B7E;border-radius:20px;padding:6px 10px;font-size:12px;font-weight:700}
+.week-trail{position:relative;display:grid;gap:0}
+.week-trail:before{content:"";position:absolute;left:15px;top:17px;bottom:17px;width:2px;background:#DCE7ED}
+.week-trail-item{position:relative;display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;padding:8px 9px;border:1px solid transparent;border-radius:11px}
+.week-trail-item.current{background:#EDF6FB;border-color:#9CC5DA}
+.week-trail-marker{position:relative;z-index:1;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#EAF0F4;border:2px solid #D5E1E8;color:#536D7C;font-size:12px;font-weight:700}
+.week-trail-item.complete .week-trail-marker{background:#DDEEF6;border-color:#8FBAD1;color:#145B7E}
+.week-trail-item.current .week-trail-marker{background:#005995;border-color:#005995;color:#fff;box-shadow:0 0 0 4px #D8EAF4}
+.week-trail-copy{min-width:0;padding:2px 0 5px}
+.week-trail-title{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.week-trail-title strong{font-size:13px;color:#173D54;font-weight:700}
+.week-trail-copy p{font-size:12px!important;line-height:1.55!important;color:#607482;margin:4px 0 0!important}
+.current-week-badge{background:#005995;color:#fff;border-radius:20px;padding:3px 7px;font-size:10px;font-weight:700;letter-spacing:.02em}
+@media(max-width:640px){.week-trail-section{padding:12px}.week-trail-heading{align-items:flex-start}.week-trail-heading h4{font-size:15px!important}.week-trail-title strong{font-size:12px}}
